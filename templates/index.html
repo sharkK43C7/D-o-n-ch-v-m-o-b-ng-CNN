@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân Loại Chó Mèo - CNN</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            background: #e9ecef;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .selected-info {
+            text-align: center;
+            margin-top: 15px;
+            color: #444;
+            font-size: 14px;
+        }
+
+        .previews-wrapper {
+            margin-top: 25px;
+            display: none;
+        }
+
+        .preview-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .previews-grid {
+            display: grid;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        }
+
+        .preview-card {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            background: #e9ecef;
+        }
+
+        .preview-name {
+            font-size: 13px;
+            color: #555;
+            word-wrap: break-word;
+        }
+
+        .results-wrapper {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results-grid {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 18px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
+        .result-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background: #e9ecef;
+        }
+
+        .result-filename {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .result-class {
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .result-confidence {
+            text-align: center;
+            font-size: 16px;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .details {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+
+        .detail-item {
+            text-align: center;
+        }
+
+        .detail-label {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .detail-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐱🐶 Phân Loại Chó Mèo</h1>
+        
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <p style="font-size: 18px; margin-bottom: 10px;">📤 Click để chọn ảnh</p>
+            <p style="color: #666; font-size: 14px;">PNG, JPG, JPEG (tối đa 6 ảnh, 16MB/ảnh)</p>
+            <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg" multiple>
+        </div>
+
+        <button class="btn" id="predictBtn" onclick="predictImage()" disabled>🔍 Phân Tích</button>
+
+        <div class="selected-info" id="selectedInfo">Chưa chọn ảnh nào</div>
+
+        <div class="previews-wrapper" id="previewsWrapper">
+            <div class="preview-title">Ảnh đã chọn (xem trước trước khi phân tích)</div>
+            <div class="previews-grid" id="previewsContainer"></div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Đang phân tích...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="results-wrapper" id="resultsWrapper">
+            <div class="results-grid" id="resultsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const predictBtn = document.getElementById('predictBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const resultsWrapper = document.getElementById('resultsWrapper');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const selectedInfo = document.getElementById('selectedInfo');
+        const previewsWrapper = document.getElementById('previewsWrapper');
+        const previewsContainer = document.getElementById('previewsContainer');
+        let selectedFiles = [];
+
+        fileInput.addEventListener('change', function(e) {
+            selectedFiles = Array.from(e.target.files).slice(0, 6);
+            if (e.target.files.length > 6) {
+                error.textContent = '❌ Chỉ chọn tối đa 6 ảnh, hệ thống đã lấy 6 ảnh đầu tiên.';
+                error.style.display = 'block';
+            } else {
+                error.style.display = 'none';
+            }
+            predictBtn.disabled = selectedFiles.length === 0;
+            resultsWrapper.style.display = 'none';
+            resultsContainer.innerHTML = '';
+            selectedInfo.textContent = selectedFiles.length
+                ? `Đã chọn ${selectedFiles.length}/6 ảnh`
+                : 'Chưa chọn ảnh nào';
+
+            if (!selectedFiles.length) {
+                previewsWrapper.style.display = 'none';
+                previewsContainer.innerHTML = '';
+                return;
+            }
+
+            previewsWrapper.style.display = 'block';
+            previewsContainer.innerHTML = '';
+            selectedFiles.forEach((file, idx) => {
+                const previewCard = document.createElement('div');
+                previewCard.className = 'preview-card';
+                previewCard.innerHTML = `
+                    <img class="preview-image" alt="Preview ${idx + 1}">
+                    <div class="preview-name">${file.name}</div>
+                `;
+                previewsContainer.appendChild(previewCard);
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    previewCard.querySelector('.preview-image').src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        async function predictImage() {
+            if (!selectedFiles.length) return;
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            resultsWrapper.style.display = 'none';
+            predictBtn.disabled = true;
+
+            const formData = new FormData();
+            selectedFiles.forEach(file => formData.append('files', file));
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Có lỗi xảy ra');
+                }
+
+                if (!data.results || !data.results.length) {
+                    throw new Error('Không nhận được kết quả từ server');
+                }
+
+                resultsContainer.innerHTML = '';
+
+                data.results.forEach((item, idx) => {
+                    const emoji = item.class === 'cat' ? '🐱' : '🐶';
+                    const label = item.class === 'cat' ? 'MÈO' : 'CHÓ';
+
+                    const card = document.createElement('div');
+                    card.className = 'result-card';
+                    card.innerHTML = `
+                        <img class="result-image" alt="Result ${idx + 1}">
+                        <div class="result-filename">${item.filename}</div>
+                        <div class="result-class">${emoji} ${label}</div>
+                        <div class="result-confidence">${item.confidence}%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${item.confidence}%;">
+                                ${item.confidence}%
+                            </div>
+                        </div>
+                        <div class="details">
+                            <div class="detail-item">
+                                <div class="detail-label">🐱 Mèo</div>
+                                <div class="detail-value">${item.details.cat}%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">🐶 Chó</div>
+                                <div class="detail-value">${item.details.dog}%</div>
+                            </div>
+                        </div>
+                    `;
+                    card.dataset.resultIdx = idx;
+                    resultsContainer.appendChild(card);
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        card.querySelector('.result-image').src = e.target.result;
+                    };
+                    reader.readAsDataURL(selectedFiles[idx]);
+                });
+
+                resultsWrapper.style.display = 'block';
+
+            } catch (err) {
+                error.textContent = '❌ ' + err.message;
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                predictBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

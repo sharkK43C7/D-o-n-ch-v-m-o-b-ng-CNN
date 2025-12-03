@@ -1,0 +1,75 @@
+CHƯƠNG 3: TRIỂN KHAI CHI TIẾT ỨNG DỤNG
+3.1. Lựa chọn và thiết kế kiến trúc mô hình (CNN)
+Sau khi đã phân tích và tiền xử lý dữ liệu ở Chương 2, bước tiếp theo là xây dựng một mô hình học máy có khả năng học được các đặc trưng (features) từ dữ liệu ảnh 28x28 pixel để phân loại chúng vào 10 lớp (từ 0 đến 9).
+Lựa chọn kiến trúc: Đối với các bài toán thị giác máy tính và nhận dạng hình ảnh, Mạng nơ-ron Tích chập (Convolutional Neural Network - CNN) đã được chứng minh là kiến trúc hiệu quả và mạnh mẽ nhất. Không giống như các mạng nơ-ron truyền thống, CNN có khả năng tự động học và trích xuất các đặc trưng không gian (spatial features) từ ảnh, chẳng hạn như cạnh, góc, và các hình dạng phức tạp hơn thông qua các bộ lọc (convolutional filters).
+Thiết kế kiến trúc mô hình: Dựa trên các thực tiễn tốt nhất cho bài toán MNIST, nhóm đã thiết kế một kiến trúc CNN tuần tự (Sequential) sử dụng Keras. Mô hình này bao gồm các khối (block) tích chập và các lớp kết nối đầy đủ (fully-connected) để thực hiện phân loại:
+•	Khối Tích chập 1: Bao gồm 2 lớp Conv2D (với 32 bộ lọc) để học các đặc trưng cơ bản, theo sau là một lớp MaxPooling2D để giảm chiều dữ liệu và một lớp Dropout (25%) để giảm thiểu hiện tượng học vẹt (overfitting).
+•	Khối Tích chập 2: Tương tự, bao gồm 2 lớp Conv2D (với 64 bộ lọc) để học các đặc trưng phức tạp hơn, theo sau là MaxPooling2D và Dropout (25%).
+•	Khối Phân loại: Lớp Flatten được sử dụng để "làm phẳng" dữ liệu 2D từ khối tích chập thành một vector 1D. Vector này sau đó được đưa qua một lớp Dense (256 nơ-ron) và cuối cùng là lớp Dense (10 nơ-ron) với hàm kích hoạt softmax để đưa ra xác suất phân loại cho 10 chữ số.
+•	Tối ưu hóa: Các lớp BatchNormalization được thêm vào sau các lớp Conv2D và Dense để giúp mô hình hội tụ nhanh và ổn định hơn.
+Xây dựng kiến trúc trúc mô hình (CNN)
+# Define the CNN architecture
+model = Sequential([
+    Conv2D(32, (3,3), activation='relu', input_shape=(28,28,1), padding='same'),
+    BatchNormalization(),
+    Conv2D(32, (3,3), activation='relu', padding='same'),
+    MaxPooling2D((2,2)),
+    Dropout(0.25),
+
+    Conv2D(64, (3,3), activation='relu', padding='same'),
+    BatchNormalization(),
+    Conv2D(64, (3,3), activation='relu', padding='same'),
+    MaxPooling2D((2,2)),
+    Dropout(0.25),
+
+    Flatten(),
+    Dense(256, activation='relu'),
+    BatchNormalization(),
+    Dropout(0.5),
+    Dense(10, activation='softmax')
+])
+3.2. Huấn luyện và tinh chỉnh mô hình (Sử dụng mnist_best.keras)
+Tăng cường dữ liệu( Data Augmentation)
+Để giúp mô hình có khả năng tổng quát hóa tốt hơn và giảm thiểu học vẹt (overfitting), chúng ta sử dụng kỹ thuật Tăng cường dữ liệu. Kỹ thuật này sẽ tạo ra các phiên bản mới, hơi khác biệt của ảnh huấn luyện trong mỗi kỷ nguyên (epoch) bằng cách áp dụng các phép biến đổi ngẫu nhiên như xoay, dịch chuyển, hoặc zoom ảnh.
+Tăng cường dữ liệu
+#DATA AUGMENTATION
+datagen = ImageDataGenerator(
+   rotation_range=8,
+   width_shift_range=0.08,
+   height_shift_range=0.08,
+   shear_range=0.08,
+   zoom_range=0.08
+)
+datagen.fit(x_train)
+Biên dịch mô hình( Compiling)
+Trước khi huấn luyện, mô hình cần được biên dịch với các thành phần sau:
+•	Hàm tối ưu (Optimizer): Chúng ta sử dụng adam, một thuật toán tối ưu hiệu quả và phổ biến, giúp điều chỉnh tốc độ học (learning rate) một cách thích ứng.
+•	Hàm mất mát (Loss Function): sparse_categorical_crossentropy được chọn vì đây là bài toán phân loại đa lớp (10 lớp) và các nhãn (labels) của chúng ta (y_train) là các số nguyên (0, 1, 2...) thay vì one-hot vector.
+•	Chỉ số đánh giá (Metrics): Chúng ta theo dõi chỉ số accuracy (độ chính xác) trong suốt quá trình huấn luyện.
+Biên dịch mô hình
+# Compile the CNN model
+model.compile(
+    optimizer='adam',
+    loss='sparse_categorical_crossentropy',
+    metrics=['accuracy']
+)
+Sử dụng Callbacks để tinh chỉnh
+Callbacks là các hàm được gọi tại các thời điểm khác nhau trong quá trình huấn luyện, cho phép chúng ta tự động hóa việc tinh chỉnh mô hình:
+•	EarlyStopping: Theo dõi val_loss (loss trên tập kiểm thử). Nếu val_loss không cải thiện sau 6 epochs (patience=6), quá trình huấn luyện sẽ tự động dừng lại để tránh overfitting.
+•	ReduceLROnPlateau: Nếu val_loss không cải thiện sau 3 epochs (patience=3), tốc độ học sẽ được giảm đi một nửa (factor=0.5) để giúp mô hình "tìm đường" tốt hơn.
+•	ModelCheckpoint: Đây là callback quan trọng nhất. Nó sẽ theo dõi val_loss và lưu lại phiên bản tốt nhất của mô hình vào tệp mnist_best.keras. Đây chính là tệp mô hình mà sau này chúng ta sử dụng trong ứng dụng web.
+callbacks = [
+EarlyStopping(monitor='val_loss', patience=6, restore_best_weights=True, verbose=1),
+ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, min_lr=1e-6, verbose=1),
+ModelCheckpoint('mnist_best.keras', save_best_only=True, monitor='val_loss', verbose=1)
+]	
+Huấn luyện mô hình (Training)
+steps_per_epoch = int(len(x_train) * 0.9 // 128)
+history = model.fit(
+    datagen.flow(x_train, y_train, batch_size=128),
+    steps_per_epoch=steps_per_epoch,
+    epochs=30,
+    validation_data=(x_test, y_test),
+    callbacks=callbacks,
+    verbose=1
+)

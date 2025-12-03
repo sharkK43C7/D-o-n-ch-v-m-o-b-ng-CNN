@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Kết Quả Training - Cat/Dog CNN Model</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2.5cm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #000;
+            background: white;
+            padding: 40px;
+            max-width: 21cm;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #000;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 18pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .header .subtitle {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .header .date {
+            font-size: 11pt;
+            margin-top: 10px;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #000;
+            text-transform: uppercase;
+        }
+
+        .subsection-title {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .info-box {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #000;
+        }
+
+        .info-row {
+            display: flex;
+            margin-bottom: 8px;
+        }
+
+        .info-label {
+            font-weight: bold;
+            width: 200px;
+        }
+
+        .info-value {
+            flex: 1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+
+        table th {
+            background: #333;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #000;
+        }
+
+        table td {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+        }
+
+        table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .metrics-highlight {
+            background: #e8f4f8;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 5px solid #2196F3;
+        }
+
+        .metrics-highlight h3 {
+            color: #1976D2;
+            margin-bottom: 10px;
+            font-size: 13pt;
+        }
+
+        .metric-value {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #1976D2;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            border: 2px solid #333;
+            padding: 15px;
+            text-align: center;
+            background: white;
+        }
+
+        .metric-card h4 {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .metric-card .value {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #000;
+            margin: 10px 0;
+        }
+
+        .metric-card .label {
+            font-size: 10pt;
+            color: #666;
+        }
+
+        .confusion-matrix {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .confusion-matrix table {
+            margin: 0 auto;
+            width: auto;
+        }
+
+        .confusion-matrix td {
+            text-align: center;
+            font-weight: bold;
+            min-width: 80px;
+        }
+
+        .confusion-matrix .diagonal {
+            background: #d4edda;
+        }
+
+        .training-chart {
+            text-align: center;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+
+        .training-chart img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-size: 10pt;
+            color: #666;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>BÁO CÁO KẾT QUẢ TRAINING</h1>
+        <div class="subtitle">Mô Hình Phân Loại Chó/Mèo Sử Dụng CNN</div>
+        <div class="date">Ngày tạo: 22/11/2025 22:28:31</div>
+    </div>
+
+    <!-- Thông tin Model -->
+    <div class="section">
+        <div class="section-title">1. Thông Tin Model</div>
+        <div class="info-box">
+            <div class="info-row">
+                <div class="info-label">Model File:</div>
+                <div class="info-value">models/cat_dog_model_v2_final.h5</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Overall Accuracy:</div>
+                <div class="info-value"><strong>80.38%</strong></div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Số Classes:</div>
+                <div class="info-value">2</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Classes:</div>
+                <div class="info-value">cats, dogs</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Đồ thị Training History -->
+    <div class="section">
+        <div class="section-title">2. Đồ Thị Training History</div>
+        <div class="training-chart">
+            <img src="models/training_history_v2.png" alt="Training History" onerror="this.style.display='none'; this.parentElement.innerHTML='<p style=\'padding: 20px;\'>⚠️ Không tìm thấy file training history</p>';">
+        </div>
+    </div>
+
+    <!-- 3 Độ Đo Chính -->
+    <div class="section page-break">
+        <div class="section-title">3. Kết Quả Đánh Giá - 3 Độ Đo Chính</div>
+        
+        <div class="subsection-title">3.1. Tổng Quan 3 Độ Đo</div>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h4>Precision</h4>
+                <div class="value">80.54%</div>
+                <div class="label">Độ chính xác dự đoán</div>
+                <div class="label" style="margin-top: 5px; font-size: 9pt;">TP / (TP + FP)</div>
+            </div>
+            <div class="metric-card">
+                <h4>Recall</h4>
+                <div class="value">80.38%</div>
+                <div class="label">Độ nhạy phát hiện</div>
+                <div class="label" style="margin-top: 5px; font-size: 9pt;">TP / (TP + FN)</div>
+            </div>
+            <div class="metric-card">
+                <h4>F1-Score</h4>
+                <div class="value">80.36%</div>
+                <div class="label">Trung bình điều hòa</div>
+                <div class="label" style="margin-top: 5px; font-size: 9pt;">2 × (P × R) / (P + R)</div>
+            </div>
+        </div>
+
+        <div class="subsection-title">3.2. Chi Tiết Theo Từng Class</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Class</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1-Score</th>
+                    <th>Support</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td><strong>cats</strong></td>
+                    <td>82.76%</td>
+                    <td>76.76%</td>
+                    <td>79.65%</td>
+                    <td>1601.0</td>
+                </tr>
+
+                <tr>
+                    <td><strong>dogs</strong></td>
+                    <td>78.32%</td>
+                    <td>84.00%</td>
+                    <td>81.06%</td>
+                    <td>1600.0</td>
+                </tr>
+
+            </tbody>
+        </table>
+
+        <div class="subsection-title">3.3. Trung Bình (Averages)</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Macro Average</th>
+                    <th>Weighted Average</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Precision</strong></td>
+                    <td>80.54%</td>
+                    <td>80.54%</td>
+                </tr>
+                <tr>
+                    <td><strong>Recall</strong></td>
+                    <td>80.38%</td>
+                    <td>80.38%</td>
+                </tr>
+                <tr>
+                    <td><strong>F1-Score</strong></td>
+                    <td>80.36%</td>
+                    <td>80.36%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Confusion Matrix -->
+    <div class="section page-break">
+        <div class="section-title">4. Confusion Matrix</div>
+        <div class="confusion-matrix">
+            <table>
+                <thead>
+                    <tr>
+                        <th></th>
+<th>Predicted: cats</th>
+<th>Predicted: dogs</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+<tr><th>Actual: cats</th>
+<td class="diagonal">1229</td>
+<td class="">372</td>
+</tr>
+<tr><th>Actual: dogs</th>
+<td class="">256</td>
+<td class="diagonal">1344</td>
+</tr>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Kết luận -->
+    <div class="section">
+        <div class="section-title">5. Kết Luận</div>
+        <div class="info-box">
+            <p><strong>Kết quả đánh giá model:</strong></p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Overall Accuracy: <strong>80.38%</strong></li>
+                <li>Precision (Macro): <strong>80.54%</strong></li>
+                <li>Recall (Macro): <strong>80.38%</strong></li>
+                <li>F1-Score (Macro): <strong>80.36%</strong></li>
+            </ul>
+            <p style="margin-top: 15px;">
+                Model đã được đánh giá trên validation set với 3 độ đo chính: Precision, Recall và F1-Score.
+                Kết quả cho thấy model có khả năng phân loại tốt với độ chính xác cao.
+            </p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>Báo cáo được tạo tự động bởi hệ thống đánh giá model</p>
+        <p>Cat/Dog CNN Classification Project</p>
+    </div>
+</body>
+</html>
